@@ -12,7 +12,7 @@ namespace Mim0.TelegramRPC;
 
 internal static class Program
 {
-    private const string AppVersion = "1.2.2";
+    private const string AppVersion = "1.4.0";
     private const string DiscordApplicationId = "1538974940643070062";
     private const string FallbackAssetKey = "default";
     private const string LitterboxEndpoint = "https://litterbox.catbox.moe/resources/internals/api.php";
