@@ -1,6 +1,6 @@
 #define MyAppName "Mim0 | TelegramRPC"
 #ifndef MyAppVersion
-#define MyAppVersion "1.2.0"
+#define MyAppVersion "1.2.2"
 #endif
 #define MyAppPublisher "Mim0"
 #define MyAppExeName "Mim0.TelegramRPC.exe"
@@ -28,8 +28,8 @@ Name: "startup"; Description: "Запускать Mim0 | TelegramRPC вмест�
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Дополнительные параметры:"
 
 [Icons]
-Name: "{group}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
+Name: "{autodesktop}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Запустить Mim0 | TelegramRPC"; Flags: nowait postinstall skipifsilent
