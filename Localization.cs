@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace Mim0.TelegramRPC;
 
@@ -9,6 +11,8 @@ internal static class Localization
     public static void Configure(string? language)
     {
         CurrentLanguage = language == "en" ? "en" : "ru";
+        Application.Idle -= RefreshTray;
+        Application.Idle += RefreshTray;
     }
 
     public static string DetectDefaultLanguage() =>
@@ -17,7 +21,6 @@ internal static class Localization
             : "en";
 
     public static bool IsEnglish => CurrentLanguage == "en";
-
     public static string T(string ru, string en) => IsEnglish ? en : ru;
 
     public static string SettingsTitle => T("Mim0 | TelegramRPC — Настройки", "Mim0 | TelegramRPC — Settings");
@@ -60,4 +63,38 @@ internal static class Localization
     public static string AboutText(string version) =>
         T($"Mim0 | TelegramRPC\n\nВерсия: {version}\n\nTelegram music → Discord Rich Presence\n\nGitHub: TheKannabisKannibal/Mim0-TelegramRPC",
           $"Mim0 | TelegramRPC\n\nVersion: {version}\n\nWindows music → Discord Rich Presence\n\nGitHub: TheKannabisKannibal/Mim0-TelegramRPC");
+
+    private static void RefreshTray(object? sender, EventArgs e)
+    {
+        try
+        {
+            var field = typeof(Program).GetField("tray", BindingFlags.Static | BindingFlags.NonPublic);
+            var tray = field?.GetValue(null) as NotifyIcon;
+            var menu = tray?.ContextMenuStrip;
+            if (tray == null || menu == null)
+                return;
+
+            var items = menu.Items;
+            if (items.Count >= 13)
+            {
+                items[0].Text = "Mim0 | TelegramRPC";
+                items[1].Text = MusicWaiting;
+                items[3].Text = SettingsMenu;
+                items[4].Text = CheckNow;
+                items[5].Text = ReconnectDiscord;
+                items[6].Text = CopyDiagnostics;
+                items[8].Text = OpenGitHub;
+                items[9].Text = OpenProgramFolder;
+                items[11].Text = About;
+                items[12].Text = Exit;
+            }
+
+            tray.Text = "Mim0 | TelegramRPC";
+            Application.Idle -= RefreshTray;
+        }
+        catch
+        {
+            // Tray may not exist yet during startup.
+        }
+    }
 }
