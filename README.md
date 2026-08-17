@@ -19,6 +19,7 @@ Mim0 is a lightweight tray application that reads the current Windows Media Sess
 - 🧰 Built-in diagnostics for GitHub issues
 - 🚀 Optional Windows startup
 - 📦 Portable build + Inno Setup installer
+- ℹ️ About dialog with the current app version
 
 ## 🖥️ Requirements
 
@@ -32,10 +33,10 @@ The release build is self-contained, so end users do **not** need to install .NE
 
 Open **Releases** and download either:
 
-- `Mim0.TelegramRPC-vX.Y.Z-win-x64.zip` — portable version
+- `Mim0-TelegramRPC-vX.Y.Z-win-x64.zip` — portable version
 - `Mim0.TelegramRPC.Setup.exe` — normal Windows installer
 
-The installer can optionally add Mim0 to Windows startup.
+The installer can optionally add Mim0 to Windows startup and create a desktop shortcut.
 
 ## ⚙️ Settings
 
@@ -122,10 +123,12 @@ Pushing to `main` runs a Windows build check.
 Pushing a tag such as:
 
 ```text
-v1.2.0
+v1.2.2
 ```
 
 builds the portable ZIP and installer and publishes both files to a GitHub Release automatically.
+
+The workflow derives the release version from the tag, so the same workflow can be reused for future releases (`v1.2.3`, `v1.3.0`, etc.).
 
 ## 🐛 Troubleshooting
 
