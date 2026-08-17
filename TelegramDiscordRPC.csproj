@@ -9,10 +9,10 @@
     <AssemblyName>Mim0.TelegramRPC</AssemblyName>
     <RootNamespace>Mim0.TelegramRPC</RootNamespace>
     <ApplicationIcon></ApplicationIcon>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Company>Mim0</Company>
     <Product>Mim0 | TelegramRPC</Product>
-    <Description>Telegram music to Discord Rich Presence.</Description>
+    <Description>Lightweight Windows music to Discord Rich Presence.</Description>
     <Copyright>Copyright © 2026 Mim0</Copyright>
   </PropertyGroup>
   <ItemGroup>

@@ -2,45 +2,47 @@ using DiscordRPC;
 using DiscordRPC.Logging;
 using WindowsMediaController;
 using Windows.Storage.Streams;
+using System.Diagnostics;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Windows.Forms;
+using Windows.Media.Control;
+
+namespace Mim0.TelegramRPC;
 
 internal static class Program
 {
-    // Public Discord Application ID. It is not a secret.
+    private const string AppVersion = "1.2.0";
     private const string DiscordApplicationId = "1538974940643070062";
-
-    // Rich Presence Art Asset used when a player does not expose a thumbnail.
     private const string FallbackAssetKey = "default";
-
     private const string LitterboxEndpoint = "https://litterbox.catbox.moe/resources/internals/api.php";
-    private static readonly string[] TelegramSourceHints =
-    [
-        "telegram",
-        "ayugram",
-        "exteragram"
-    ];
+    private const string GitHubUrl = "https://github.com/TheKannabisKannibal/Mim0-TelegramRPC";
+
+    private static readonly string[] TelegramSourceHints = ["telegram", "ayugram", "exteragram"];
+    private static readonly HttpClient Http = new();
 
     private static DiscordRpcClient? discord;
     private static MediaManager? mediaManager;
-    private static readonly HttpClient Http = new();
-    private static string? lastSignature;
-    private static string? lastCoverSignature;
-    private static string? lastCoverUrl;
-    private static bool wasPlaying;
-    private static bool stopping;
-    private static bool updateInProgress;
     private static NotifyIcon? tray;
     private static System.Windows.Forms.Timer? timer;
+    private static AppSettings settings = new();
+    private static string? lastSignature;
+    private static string? lastTrackSignature;
+    private static string? lastCoverUrl;
+    private static bool updateInProgress;
+    private static bool stopping;
     private static DateTime nextDiscordRetryUtc = DateTime.MinValue;
+    private static string currentStatus = "запуск";
+    private static string currentTrack = "—";
+    private static string currentSource = "—";
 
     [STAThread]
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
-
+        settings = SettingsStore.Load();
         Http.Timeout = TimeSpan.FromSeconds(20);
-        Http.DefaultRequestHeaders.UserAgent.ParseAdd("Mim0-TelegramRPC/1.1");
+        Http.DefaultRequestHeaders.UserAgent.ParseAdd($"Mim0-TelegramRPC/{AppVersion}");
 
         tray = CreateTray();
         Application.ApplicationExit += (_, _) => Cleanup();
@@ -50,18 +52,17 @@ internal static class Program
             mediaManager = new MediaManager();
             mediaManager.Start();
 
-            // WinForms needs a real message loop. Without Application.Run the
-            // tray icon and Windows media events are unreliable.
-            timer = new System.Windows.Forms.Timer { Interval = 750 };
+            timer = new System.Windows.Forms.Timer { Interval = 1000 };
             timer.Tick += async (_, _) => await UpdatePresenceSafe();
             timer.Start();
 
-            tray.Text = "Mim0 | TelegramRPC — работает";
+            SetTrayStatus("ожидание музыки");
             Application.Run(new ApplicationContext());
         }
         catch (Exception ex)
         {
-            SetTrayStatus($"ошибка: {Limit(ex.Message, 45)}");
+            SetTrayStatus($"ошибка: {Limit(ex.Message, 42)}");
+            MessageBox.Show($"Mim0 не удалось запустить:\n\n{ex.Message}", "Mim0 | TelegramRPC", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
@@ -72,49 +73,56 @@ internal static class Program
     private static NotifyIcon CreateTray()
     {
         var menu = new ContextMenuStrip();
-
-        menu.Items.Add("Mim0 | TelegramRPC", null, (_, _) => { });
+        var statusItem = new ToolStripMenuItem("Mim0 | TelegramRPC") { Enabled = false };
+        var trackItem = new ToolStripMenuItem("Музыка: ожидание") { Enabled = false };
+        menu.Items.Add(statusItem);
+        menu.Items.Add(trackItem);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Открыть папку программы", null, (_, _) =>
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = AppContext.BaseDirectory,
-                    UseShellExecute = true
-                });
-            }
-            catch { }
-        });
-        menu.Items.Add("Проверить GitHub", null, (_, _) =>
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://github.com/",
-                    UseShellExecute = true
-                });
-            }
-            catch { }
-        });
+        menu.Items.Add("Настройки", null, (_, _) => OpenSettings());
+        menu.Items.Add("Проверить сейчас", null, async (_, _) => await UpdatePresenceSafe(force: true));
+        menu.Items.Add("Переподключить Discord", null, (_, _) => ForceDiscordReconnect());
+        menu.Items.Add("Скопировать диагностику", null, (_, _) => CopyDiagnostics());
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Открыть GitHub", null, (_, _) => OpenUrl(GitHubUrl));
+        menu.Items.Add("Открыть папку программы", null, (_, _) => OpenUrl(AppContext.BaseDirectory));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Выход", null, (_, _) => Application.Exit());
 
-        return new NotifyIcon
+        tray = new NotifyIcon
         {
             Icon = System.Drawing.SystemIcons.Application,
             Visible = true,
             Text = "Mim0 | TelegramRPC",
             ContextMenuStrip = menu
         };
+
+        tray.MouseDoubleClick += (_, _) => OpenSettings();
+        return tray;
     }
 
-    private static async Task UpdatePresenceSafe()
+    private static void OpenSettings()
+    {
+        if (stopping)
+            return;
+
+        using var form = new SettingsForm(settings);
+        if (form.ShowDialog() != DialogResult.OK)
+            return;
+
+        settings = form.Settings;
+        lastSignature = null;
+        lastTrackSignature = null;
+        lastCoverUrl = null;
+        SetTrayStatus("настройки сохранены");
+    }
+
+    private static async Task UpdatePresenceSafe(bool force = false)
     {
         if (stopping || updateInProgress)
             return;
+
+        if (force)
+            lastSignature = null;
 
         updateInProgress = true;
         try
@@ -123,8 +131,7 @@ internal static class Program
         }
         catch
         {
-            // A media session can disappear while we are reading it.
-            // Keep the tray process alive and retry on the next tick.
+            SetTrayStatus("повторная попытка");
         }
         finally
         {
@@ -146,11 +153,8 @@ internal static class Program
 
         var playback = session.ControlSession.GetPlaybackInfo();
         var status = playback.PlaybackStatus;
-
-        bool playing = status ==
-            Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
-        bool paused = status ==
-            Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus.Paused;
+        bool playing = status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
+        bool paused = status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Paused;
 
         if (!playing && !paused)
         {
@@ -165,56 +169,61 @@ internal static class Program
             return;
         }
 
-        string title = string.IsNullOrWhiteSpace(props.Title)
-            ? "Unknown track"
-            : props.Title.Trim();
+        string title = string.IsNullOrWhiteSpace(props.Title) ? "Unknown track" : props.Title.Trim();
+        string artist = string.IsNullOrWhiteSpace(props.Artist) ? "Unknown artist" : props.Artist.Trim();
+        string source = session.ControlSession.SourceAppUserModelId ?? "Unknown source";
+        string trackSignature = $"{source}\n{title}\n{artist}";
 
-        string artist = string.IsNullOrWhiteSpace(props.Artist)
-            ? "Unknown artist"
-            : props.Artist.Trim();
-
-        var trackSignature = $"{session.ControlSession.SourceAppUserModelId}\n{title}\n{artist}";
-
-        if (lastCoverSignature != trackSignature)
+        if (settings.ShowAlbumArt && lastTrackSignature != trackSignature)
         {
             lastCoverUrl = null;
-
             var coverPath = await SaveThumbnailAsync(props);
             if (coverPath != null)
                 lastCoverUrl = await UploadToLitterboxAsync(coverPath);
-
-            lastCoverSignature = trackSignature;
+            lastTrackSignature = trackSignature;
+        }
+        else if (!settings.ShowAlbumArt)
+        {
+            lastCoverUrl = null;
         }
 
         if (!EnsureDiscord())
             return;
 
-        var signature = $"{title}\n{artist}\n{status}\n{lastCoverUrl}";
-        if (signature == lastSignature && playing == wasPlaying)
+        string details = FormatPresence(settings.DetailsFormat, title, artist, source);
+        string state = FormatPresence(settings.StateFormat, title, artist, source);
+        if (paused && settings.ShowPausedState)
+            state = Limit("⏸ " + state, 128);
+
+        var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}";
+        if (signature == lastSignature)
+        {
+            currentTrack = $"{title} — {artist}";
+            currentSource = source;
+            currentStatus = paused ? "пауза" : "играет";
+            SetTrayStatus($"{currentStatus}: {Limit(title, 42)}");
             return;
+        }
 
         var presence = new RichPresence
         {
             Type = ActivityType.Listening,
-            Details = Limit(title, 128),
-            State = Limit(paused ? "⏸ " + artist : artist, 128),
+            Details = Limit(details, 128),
+            State = Limit(state, 128),
             Assets = new Assets
             {
-                LargeImageKey = string.IsNullOrWhiteSpace(lastCoverUrl)
-                    ? FallbackAssetKey
-                    : lastCoverUrl,
+                LargeImageKey = string.IsNullOrWhiteSpace(lastCoverUrl) ? FallbackAssetKey : lastCoverUrl,
                 LargeImageText = Limit($"{title} — {artist}", 128)
             }
         };
 
-        if (playing)
+        if (playing && settings.ShowProgress)
         {
             var timeline = session.ControlSession.GetTimelineProperties();
             if (timeline.EndTime > timeline.StartTime)
             {
                 var duration = timeline.EndTime - timeline.StartTime;
                 var position = timeline.Position;
-
                 if (position >= TimeSpan.Zero && position < duration)
                 {
                     presence.Timestamps = new Timestamps
@@ -230,13 +239,25 @@ internal static class Program
         {
             discord!.SetPresence(presence);
             lastSignature = signature;
-            wasPlaying = playing;
-            SetTrayStatus($"играет: {Limit(title, 45)}");
+            currentTrack = $"{title} — {artist}";
+            currentSource = source;
+            currentStatus = paused ? "пауза" : "играет";
+            SetTrayStatus($"{currentStatus}: {Limit(title, 42)}");
         }
         catch
         {
             ResetDiscord();
         }
+    }
+
+    private static string FormatPresence(string format, string title, string artist, string source)
+    {
+        var sourceName = source.Split(['!', '_'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? source;
+        var result = format
+            .Replace("{title}", title, StringComparison.OrdinalIgnoreCase)
+            .Replace("{artist}", artist, StringComparison.OrdinalIgnoreCase)
+            .Replace("{source}", sourceName, StringComparison.OrdinalIgnoreCase);
+        return string.IsNullOrWhiteSpace(result) ? title : result.Trim();
     }
 
     private static MediaManager.MediaSession? FindBestMediaSession()
@@ -252,35 +273,30 @@ internal static class Program
             try
             {
                 var status = session.ControlSession.GetPlaybackInfo().PlaybackStatus;
-                bool active =
-                    status == Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing ||
-                    status == Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus.Paused;
-
+                bool active = status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing ||
+                              status == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Paused;
                 if (!active)
                     continue;
 
-                int score = 0;
                 var source = session.ControlSession.SourceAppUserModelId ?? string.Empty;
                 var sourceLower = source.ToLowerInvariant();
+                bool isTelegram = TelegramSourceHints.Any(sourceLower.Contains);
 
-                if (TelegramSourceHints.Any(sourceLower.Contains))
-                    score += 100;
+                if (settings.TelegramOnly && !isTelegram)
+                    continue;
 
+                int score = isTelegram ? 100 : 10;
                 if (ReferenceEquals(session, focused))
                     score += 20;
-
                 candidates.Add((session, score));
             }
             catch
             {
-                // Session may close between enumeration and GetPlaybackInfo().
+                // Session may disappear while being enumerated.
             }
         }
 
-        return candidates
-            .OrderByDescending(x => x.Score)
-            .Select(x => x.Session)
-            .FirstOrDefault();
+        return candidates.OrderByDescending(x => x.Score).Select(x => x.Session).FirstOrDefault();
     }
 
     private static bool EnsureDiscord()
@@ -292,7 +308,6 @@ internal static class Program
             return false;
 
         ResetDiscord();
-
         try
         {
             discord = new DiscordRpcClient(DiscordApplicationId)
@@ -304,7 +319,6 @@ internal static class Program
                 throw new InvalidOperationException("Discord IPC is unavailable.");
 
             nextDiscordRetryUtc = DateTime.MinValue;
-            SetTrayStatus("Discord подключён");
             return true;
         }
         catch
@@ -317,8 +331,14 @@ internal static class Program
         }
     }
 
-    private static async Task<string?> SaveThumbnailAsync(
-        Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties props)
+    private static void ForceDiscordReconnect()
+    {
+        ResetDiscord();
+        nextDiscordRetryUtc = DateTime.MinValue;
+        SetTrayStatus("переподключение Discord");
+    }
+
+    private static async Task<string?> SaveThumbnailAsync(GlobalSystemMediaTransportControlsSessionMediaProperties props)
     {
         try
         {
@@ -327,7 +347,6 @@ internal static class Program
 
             var dir = Path.Combine(Path.GetTempPath(), "Mim0-TelegramRPC");
             Directory.CreateDirectory(dir);
-
             foreach (var file in Directory.EnumerateFiles(dir, "cover_*"))
             {
                 try { File.Delete(file); } catch { }
@@ -339,15 +358,12 @@ internal static class Program
 
             using var reader = new DataReader(ras.GetInputStreamAt(0));
             await reader.LoadAsync((uint)ras.Size);
-
             var bytes = new byte[(int)ras.Size];
             reader.ReadBytes(bytes);
-
             if (bytes.Length == 0)
                 return null;
 
-            var ext = DetectImageExtension(bytes);
-            var path = Path.Combine(dir, "cover_" + Guid.NewGuid().ToString("N") + ext);
+            var path = Path.Combine(dir, "cover_" + Guid.NewGuid().ToString("N") + DetectImageExtension(bytes));
             await File.WriteAllBytesAsync(path, bytes);
             return path;
         }
@@ -359,22 +375,9 @@ internal static class Program
 
     private static string DetectImageExtension(byte[] bytes)
     {
-        if (bytes.Length >= 3 &&
-            bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
-            return ".jpg";
-
-        if (bytes.Length >= 8 &&
-            bytes[0] == 0x89 && bytes[1] == 0x50 &&
-            bytes[2] == 0x4E && bytes[3] == 0x47)
-            return ".png";
-
-        if (bytes.Length >= 12 &&
-            bytes[0] == 'R' && bytes[1] == 'I' &&
-            bytes[2] == 'F' && bytes[3] == 'F' &&
-            bytes[8] == 'W' && bytes[9] == 'E' &&
-            bytes[10] == 'B' && bytes[11] == 'P')
-            return ".webp";
-
+        if (bytes.Length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) return ".jpg";
+        if (bytes.Length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return ".png";
+        if (bytes.Length >= 12 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F' && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') return ".webp";
         return ".jpg";
     }
 
@@ -385,22 +388,16 @@ internal static class Program
             using var form = new MultipartFormDataContent();
             form.Add(new StringContent("fileupload"), "reqtype");
             form.Add(new StringContent("1h"), "time");
-
             await using var stream = File.OpenRead(path);
             using var file = new StreamContent(stream);
             file.Headers.ContentType = new MediaTypeHeaderValue(GetContentType(path));
             form.Add(file, "fileToUpload", Path.GetFileName(path));
-
             using var response = await Http.PostAsync(LitterboxEndpoint, form);
             if (!response.IsSuccessStatusCode)
                 return null;
 
             var url = (await response.Content.ReadAsStringAsync()).Trim();
-
-            return Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
-                   uri.Scheme == Uri.UriSchemeHttps
-                ? url
-                : null;
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps ? url : null;
         }
         catch
         {
@@ -408,13 +405,12 @@ internal static class Program
         }
     }
 
-    private static string GetContentType(string path) =>
-        Path.GetExtension(path).ToLowerInvariant() switch
-        {
-            ".png" => "image/png",
-            ".webp" => "image/webp",
-            _ => "image/jpeg"
-        };
+    private static string GetContentType(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+    {
+        ".png" => "image/png",
+        ".webp" => "image/webp",
+        _ => "image/jpeg"
+    };
 
     private static void ClearIfNeeded()
     {
@@ -422,11 +418,12 @@ internal static class Program
             return;
 
         try { discord.ClearPresence(); } catch { }
-
         lastSignature = null;
-        wasPlaying = false;
-        lastCoverSignature = null;
+        lastTrackSignature = null;
         lastCoverUrl = null;
+        currentTrack = "—";
+        currentSource = "—";
+        currentStatus = "ожидание";
         SetTrayStatus("ожидание музыки");
     }
 
@@ -434,40 +431,61 @@ internal static class Program
     {
         try { discord?.ClearPresence(); } catch { }
         try { discord?.Dispose(); } catch { }
-
         discord = null;
         lastSignature = null;
-        wasPlaying = false;
     }
 
-    private static void SetTrayStatus(string status)
+    private static void CopyDiagnostics()
     {
-        if (tray == null)
-            return;
+        var text = new StringBuilder()
+            .AppendLine($"Mim0 | TelegramRPC {AppVersion}")
+            .AppendLine($"OS: {Environment.OSVersion}")
+            .AppendLine($"64-bit process: {Environment.Is64BitProcess}")
+            .AppendLine($"Discord: {(discord?.IsInitialized == true ? "connected" : "disconnected")}")
+            .AppendLine($"Status: {currentStatus}")
+            .AppendLine($"Track: {currentTrack}")
+            .AppendLine($"Source: {currentSource}")
+            .AppendLine($"Telegram only: {settings.TelegramOnly}")
+            .AppendLine($"Settings: {SettingsStore.FileLocation}")
+            .ToString();
 
         try
         {
-            tray.Text = Limit($"Mim0 | TelegramRPC — {status}", 63);
+            Clipboard.SetText(text);
+            SetTrayStatus("диагностика скопирована");
         }
         catch { }
     }
 
-    private static string Limit(string value, int max) =>
-        value.Length <= max ? value : value[..max];
+    private static void OpenUrl(string path)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    private static void SetTrayStatus(string status)
+    {
+        currentStatus = status;
+        if (tray == null)
+            return;
+        try { tray.Text = Limit($"Mim0 | TelegramRPC — {status}", 63); } catch { }
+    }
+
+    private static string Limit(string value, int max) => value.Length <= max ? value : value[..max];
 
     private static void Cleanup()
     {
         if (stopping)
             return;
-
         stopping = true;
-
         try { timer?.Stop(); } catch { }
         try { discord?.ClearPresence(); } catch { }
         try { discord?.Dispose(); } catch { }
         try { Http.Dispose(); } catch { }
         try { tray?.Dispose(); } catch { }
-
         discord = null;
         mediaManager = null;
         timer = null;
