@@ -12,6 +12,7 @@ internal sealed class AppSettings
     public bool StartWithWindows { get; set; } = false;
     public string DetailsFormat { get; set; } = "{title}";
     public string StateFormat { get; set; } = "{artist}";
+    public string Language { get; set; } = Localization.DetectDefaultLanguage();
 
     public AppSettings Clone() => new()
     {
@@ -21,7 +22,8 @@ internal sealed class AppSettings
         TelegramOnly = TelegramOnly,
         StartWithWindows = StartWithWindows,
         DetailsFormat = DetailsFormat,
-        StateFormat = StateFormat
+        StateFormat = StateFormat,
+        Language = Language
     };
 }
 
