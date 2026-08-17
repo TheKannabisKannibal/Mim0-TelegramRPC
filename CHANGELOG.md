@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0] - 2026-08-17
+
+### Added
+- GitHub Releases update checker on application startup.
+- One-click download and launch of the latest Inno Setup installer.
+- Update prompts remember the offered version so the same release is not shown repeatedly.
+
 ## [1.2.0] - 2026-08-17
 
 ### Added
