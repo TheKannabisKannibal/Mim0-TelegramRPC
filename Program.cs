@@ -12,7 +12,7 @@ namespace Mim0.TelegramRPC;
 
 internal static class Program
 {
-    private const string AppVersion = "1.2.0";
+    private const string AppVersion = "1.2.2";
     private const string DiscordApplicationId = "1538974940643070062";
     private const string FallbackAssetKey = "default";
     private const string LitterboxEndpoint = "https://litterbox.catbox.moe/resources/internals/api.php";
@@ -86,18 +86,28 @@ internal static class Program
         menu.Items.Add("Открыть GitHub", null, (_, _) => OpenUrl(GitHubUrl));
         menu.Items.Add("Открыть папку программы", null, (_, _) => OpenUrl(AppContext.BaseDirectory));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("О программе", null, (_, _) => ShowAbout());
         menu.Items.Add("Выход", null, (_, _) => Application.Exit());
 
         tray = new NotifyIcon
         {
             Icon = System.Drawing.SystemIcons.Application,
             Visible = true,
-            Text = "Mim0 | TelegramRPC",
+            Text = $"Mim0 | TelegramRPC v{AppVersion}",
             ContextMenuStrip = menu
         };
 
         tray.MouseDoubleClick += (_, _) => OpenSettings();
         return tray;
+    }
+
+    private static void ShowAbout()
+    {
+        MessageBox.Show(
+            $"Mim0 | TelegramRPC\n\nВерсия: {AppVersion}\n\nTelegram music → Discord Rich Presence\n\nGitHub: TheKannabisKannibal/Mim0-TelegramRPC",
+            "О программе",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
     }
 
     private static void OpenSettings()
