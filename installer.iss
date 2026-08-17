@@ -11,7 +11,7 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\Mim0\TelegramRPC
-DefaultGroupName={#MyAppName}
+DefaultGroupName=Mim0 TelegramRPC
 OutputDir=installer-output
 OutputBaseFilename=Mim0.TelegramRPC.Setup
 Compression=lzma
@@ -29,8 +29,8 @@ Name: "startup"; Description: "Запускать Mim0 | TelegramRPC вмест�
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Дополнительные параметры:"
 
 [Icons]
-Name: "{group}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
-Name: "{autodesktop}\Mim0 | TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
+Name: "{group}\Mim0 TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
+Name: "{autodesktop}\Mim0 TelegramRPC"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Comment: "Mim0 | TelegramRPC v{#MyAppVersion}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Запустить Mim0 | TelegramRPC"; Flags: nowait postinstall skipifsilent
