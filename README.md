@@ -21,6 +21,35 @@ Mim0 is a lightweight tray application that reads the current Windows Media Sess
 - 📦 Portable build + Inno Setup installer
 - ℹ️ About dialog with the current app version
 
+## 🖼️ Screenshots
+
+Mim0 displays the music currently playing in Telegram directly in your Discord profile, including the track title, artist, album art and playback progress.
+
+### Discord Rich Presence
+
+<p align="center">
+  <img src="docs/screenshots/discord-profile-1.png" alt="Mim0 Discord Rich Presence profile" width="420">
+  <img src="docs/screenshots/discord-profile-2.png" alt="Mim0 Discord Rich Presence with another track" width="420">
+</p>
+
+### Discord activity details
+
+<p align="center">
+  <img src="docs/screenshots/discord-activity.png" alt="Mim0 Discord activity" width="850">
+</p>
+
+### System tray
+
+<p align="center">
+  <img src="docs/screenshots/tray-menu.png" alt="Mim0 system tray menu" width="320">
+</p>
+
+### Settings
+
+<p align="center">
+  <img src="docs/screenshots/settings.png" alt="Mim0 settings window" width="650">
+</p>
+
 ## 🖥️ Requirements
 
 - Windows 10/11 x64
@@ -123,12 +152,12 @@ Pushing to `main` runs a Windows build check.
 Pushing a tag such as:
 
 ```text
-v1.2.2
+v1.4.0
 ```
 
 builds the portable ZIP and installer and publishes both files to a GitHub Release automatically.
 
-The workflow derives the release version from the tag, so the same workflow can be reused for future releases (`v1.2.3`, `v1.3.0`, etc.).
+The workflow derives the release version from the tag, so the same workflow can be reused for future releases.
 
 ## 🐛 Troubleshooting
 
@@ -154,6 +183,7 @@ Use the tray menu → **Скопировать диагностику**, then pa
 ```text
 Mim0-TelegramRPC/
 ├── .github/workflows/ci-release.yml
+├── docs/screenshots/
 ├── Program.cs
 ├── Settings.cs
 ├── SettingsForm.cs
