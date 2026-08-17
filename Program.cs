@@ -91,7 +91,8 @@ internal static class Program
 
         tray = new NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!)
+       ?? System.Drawing.SystemIcons.Application,
             Visible = true,
             Text = $"Mim0 | TelegramRPC v{AppVersion}",
             ContextMenuStrip = menu
