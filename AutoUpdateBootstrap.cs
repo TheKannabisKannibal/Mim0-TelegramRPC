@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace Mim0.TelegramRPC;
@@ -8,7 +9,8 @@ internal static class AutoUpdateBootstrap
     [ModuleInitializer]
     internal static void Initialize()
     {
-        _ = Task.Run(async () =>
+        _ = Task.Run(async ()
+        =>
         {
             try
             {
