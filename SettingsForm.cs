@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -13,6 +12,7 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox startWithWindows;
     private readonly TextBox detailsFormat;
     private readonly TextBox stateFormat;
+    private readonly ComboBox language;
     private readonly Label hint;
 
     public AppSettings Settings { get; private set; }
@@ -20,14 +20,15 @@ internal sealed class SettingsForm : Form
     public SettingsForm(AppSettings settings)
     {
         Settings = settings.Clone();
+        Localization.Configure(Settings.Language);
 
-        Text = "Mim0 | TelegramRPC — Настройки";
+        Text = Localization.SettingsTitle;
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
-        ClientSize = new Size(520, 500);
+        ClientSize = new Size(520, 540);
         Font = new Font("Segoe UI", 9F);
 
         var title = new Label
@@ -40,37 +41,53 @@ internal sealed class SettingsForm : Form
 
         var subtitle = new Label
         {
-            Text = "Настрой, что именно будет показываться в Discord.",
+            Text = Localization.SettingsSubtitle,
             AutoSize = true,
             Location = new Point(26, 51),
             ForeColor = SystemColors.GrayText
         };
 
-        showAlbumArt = CreateCheckBox("Показывать обложку трека", 90, Settings.ShowAlbumArt);
-        showProgress = CreateCheckBox("Показывать прогресс воспроизведения", 120, Settings.ShowProgress);
-        showPaused = CreateCheckBox("Показывать ⏸ при паузе", 150, Settings.ShowPausedState);
-        telegramOnly = CreateCheckBox("Использовать только Telegram-плееры", 180, Settings.TelegramOnly);
-        startWithWindows = CreateCheckBox("Запускать Mim0 вместе с Windows", 210, Settings.StartWithWindows);
+        showAlbumArt = CreateCheckBox(Localization.AlbumArt, 90, Settings.ShowAlbumArt);
+        showProgress = CreateCheckBox(Localization.Progress, 120, Settings.ShowProgress);
+        showPaused = CreateCheckBox(Localization.Paused, 150, Settings.ShowPausedState);
+        telegramOnly = CreateCheckBox(Localization.TelegramOnly, 180, Settings.TelegramOnly);
+        startWithWindows = CreateCheckBox(Localization.StartWithWindows, 210, Settings.StartWithWindows);
 
-        var detailsLabel = new Label { Text = "Верхняя строка (Details)", AutoSize = true, Location = new Point(24, 252) };
-        detailsFormat = CreateTextBox(Settings.DetailsFormat, 280);
+        var languageLabel = new Label
+        {
+            Text = Localization.LanguageLabel,
+            AutoSize = true,
+            Location = new Point(24, 246)
+        };
 
-        var stateLabel = new Label { Text = "Нижняя строка (State)", AutoSize = true, Location = new Point(24, 319) };
-        stateFormat = CreateTextBox(Settings.StateFormat, 347);
+        language = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Width = 140,
+            Location = new Point(85, 242)
+        };
+        language.Items.AddRange([Localization.Russian, Localization.English]);
+        language.SelectedIndex = Settings.Language == "en" ? 1 : 0;
+
+        var detailsLabel = new Label { Text = Localization.DetailsLabel, AutoSize = true, Location = new Point(24, 282) };
+        detailsFormat = CreateTextBox(Settings.DetailsFormat, 310);
+
+        var stateLabel = new Label { Text = Localization.StateLabel, AutoSize = true, Location = new Point(24, 349) };
+        stateFormat = CreateTextBox(Settings.StateFormat, 377);
 
         hint = new Label
         {
-            Text = "Доступные переменные: {title}, {artist}, {source}\nПример: {title} / {artist}",
+            Text = Localization.Hint,
             AutoSize = true,
-            Location = new Point(24, 382),
+            Location = new Point(24, 412),
             ForeColor = SystemColors.GrayText
         };
 
-        var reset = new Button { Text = "По умолчанию", AutoSize = true, Location = new Point(24, 438) };
+        var reset = new Button { Text = Localization.Default, AutoSize = true, Location = new Point(24, 478) };
         reset.Click += (_, _) => ResetDefaults();
 
-        var cancel = new Button { Text = "Отмена", DialogResult = DialogResult.Cancel, AutoSize = true, Location = new Point(350, 438) };
-        var save = new Button { Text = "Сохранить", DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(430, 438) };
+        var cancel = new Button { Text = Localization.Cancel, DialogResult = DialogResult.Cancel, AutoSize = true, Location = new Point(350, 478) };
+        var save = new Button { Text = Localization.Save, DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(430, 478) };
         save.Click += (_, _) => SaveAndClose();
 
         AcceptButton = save;
@@ -79,6 +96,7 @@ internal sealed class SettingsForm : Form
         Controls.AddRange([
             title, subtitle,
             showAlbumArt, showProgress, showPaused, telegramOnly, startWithWindows,
+            languageLabel, language,
             detailsLabel, detailsFormat, stateLabel, stateFormat, hint,
             reset, cancel, save
         ]);
@@ -114,6 +132,7 @@ internal sealed class SettingsForm : Form
     {
         var details = string.IsNullOrWhiteSpace(detailsFormat.Text) ? "{title}" : detailsFormat.Text.Trim();
         var state = string.IsNullOrWhiteSpace(stateFormat.Text) ? "{artist}" : stateFormat.Text.Trim();
+        var selectedLanguage = language.SelectedIndex == 1 ? "en" : "ru";
 
         Settings = new AppSettings
         {
@@ -123,19 +142,21 @@ internal sealed class SettingsForm : Form
             TelegramOnly = telegramOnly.Checked,
             StartWithWindows = startWithWindows.Checked,
             DetailsFormat = details,
-            StateFormat = state
+            StateFormat = state,
+            Language = selectedLanguage
         };
 
         try
         {
             SettingsStore.Save(Settings);
             SettingsStore.ApplyStartup(Settings.StartWithWindows);
+            Localization.Configure(Settings.Language);
             DialogResult = DialogResult.OK;
             Close();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"Не удалось сохранить настройки:\n{ex.Message}", "Mim0", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, $"{Localization.SaveError}:\n{ex.Message}", "Mim0", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }
