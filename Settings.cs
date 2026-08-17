@@ -40,15 +40,20 @@ internal static class SettingsStore
     {
         try
         {
+            AppSettings settings;
             if (!File.Exists(FilePath))
-                return new AppSettings();
+                settings = new AppSettings();
+            else
+                settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), JsonOptions) ?? new AppSettings();
 
-            return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), JsonOptions)
-                   ?? new AppSettings();
+            Localization.Configure(settings.Language);
+            return settings;
         }
         catch
         {
-            return new AppSettings();
+            var settings = new AppSettings();
+            Localization.Configure(settings.Language);
+            return settings;
         }
     }
 
