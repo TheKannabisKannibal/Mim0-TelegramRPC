@@ -17,6 +17,7 @@ internal static class Program
     private const string FallbackAssetKey = "default";
     private const string LitterboxEndpoint = "https://litterbox.catbox.moe/resources/internals/api.php";
     private const string GitHubUrl = "https://github.com/TheKannabisKannibal/Mim0-TelegramRPC";
+    private const string GitHubButtonLabel = "Mim0 на GitHub";
 
     private static readonly string[] TelegramSourceHints = ["telegram", "ayugram", "exteragram"];
     private static readonly HttpClient Http = new();
@@ -206,7 +207,8 @@ internal static class Program
         if (paused && settings.ShowPausedState)
             state = Limit("⏸ " + state, 128);
 
-        var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}";
+        // Test branch: Rich Presence button + Spotify-like timeline.
+        var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}\n{GitHubUrl}";
         if (signature == lastSignature)
         {
             currentTrack = $"{title} — {artist}";
@@ -224,10 +226,23 @@ internal static class Program
             Assets = new Assets
             {
                 LargeImageKey = string.IsNullOrWhiteSpace(lastCoverUrl) ? FallbackAssetKey : lastCoverUrl,
-                LargeImageText = Limit($"{title} — {artist}", 128)
-            }
+                LargeImageText = Limit($"{title} — {artist}", 128),
+                // Reuse the existing Mim0/default Discord asset as the small app icon.
+                SmallImageKey = FallbackAssetKey,
+                SmallImageText = "Mim0 | TelegramRPC"
+            },
+            Buttons =
+            [
+                new Button
+                {
+                    Label = GitHubButtonLabel,
+                    Url = GitHubUrl
+                }
+            ]
         };
 
+        // Discord renders this timestamp pair as the thin playback progress bar,
+        // with elapsed/remaining time, similar to Spotify.
         if (playing && settings.ShowProgress)
         {
             var timeline = session.ControlSession.GetTimelineProperties();
