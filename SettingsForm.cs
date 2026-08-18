@@ -83,11 +83,11 @@ internal sealed class SettingsForm : Form
             ForeColor = SystemColors.GrayText
         };
 
-        var reset = new Button { Text = Localization.Default, AutoSize = true, Location = new Point(24, 478) };
+        var reset = new System.Windows.Forms.Button { Text = Localization.Default, AutoSize = true, Location = new Point(24, 478) };
         reset.Click += (_, _) => ResetDefaults();
 
-        var cancel = new Button { Text = Localization.Cancel, DialogResult = DialogResult.Cancel, AutoSize = true, Location = new Point(350, 478) };
-        var save = new Button { Text = Localization.Save, DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(430, 478) };
+        var cancel = new System.Windows.Forms.Button { Text = Localization.Cancel, DialogResult = DialogResult.Cancel, AutoSize = true, Location = new Point(350, 478) };
+        var save = new System.Windows.Forms.Button { Text = Localization.Save, DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(430, 478) };
         save.Click += (_, _) => SaveAndClose();
 
         AcceptButton = save;
