@@ -2,6 +2,8 @@
 
 **Telegram music → Discord Rich Presence for Windows**
 
+[**🇬🇧 English**](README.md) · [🇷🇺 Русский](README.ru.md)
+
 Mim0 is a lightweight tray application that reads the current Windows Media Session and publishes the track to Discord Rich Presence.
 
 ## ✨ Features
@@ -69,7 +71,7 @@ The installer can optionally add Mim0 to Windows startup and create a desktop sh
 
 ## ⚙️ Settings
 
-Right-click the tray icon and choose **Настройки**.
+Right-click the tray icon and choose **Settings**.
 
 Available options:
 
@@ -122,7 +124,7 @@ Windows Media Session may expose a track thumbnail. Discord Rich Presence cannot
 - No Telegram messages, chats, contacts, or audio are uploaded.
 - You can disable album art in Settings.
 
-If you do not want any cover image upload, turn off **Показывать обложку трека**.
+If you do not want any cover image upload, turn off **Show album art**.
 
 ## 🛠️ Build from source
 
@@ -152,7 +154,7 @@ Pushing to `main` runs a Windows build check.
 Pushing a tag such as:
 
 ```text
-v1.4.0
+v1.5.0
 ```
 
 builds the portable ZIP and installer and publishes both files to a GitHub Release automatically.
@@ -167,16 +169,16 @@ The workflow derives the release version from the tag, so the same workflow can 
 2. Start Mim0.
 3. Start a track in Telegram.
 4. Wait a few seconds.
-5. Right-click the tray icon → **Проверить сейчас**.
-6. If necessary, use **Переподключить Discord**.
+5. Right-click the tray icon → **Check now**.
+6. If necessary, use **Reconnect Discord**.
 
 ### Telegram is playing but Mim0 sees nothing
 
-Open Settings and make sure **Использовать только Telegram-плееры** is enabled. If your Telegram client exposes a different Windows Media Session identifier, disable that option to test all compatible sessions.
+Open Settings and make sure **Use Telegram players only** is enabled. If your Telegram client exposes a different Windows Media Session identifier, disable that option to test all compatible sessions.
 
 ### Need a bug report
 
-Use the tray menu → **Скопировать диагностику**, then paste the result into a GitHub Issue. Do not paste personal data or private tokens.
+Use the tray menu → **Copy diagnostics**, then paste the result into a GitHub Issue. Do not paste personal data or private tokens.
 
 ## 📁 Project structure
 
