@@ -207,7 +207,7 @@ internal static class Program
         if (paused && settings.ShowPausedState)
             state = Limit("⏸ " + state, 128);
 
-        // Test branch: add a real Rich Presence button without changing the existing settings model.
+        // Test branch: Rich Presence button + Spotify-like timeline.
         var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}\n{GitHubUrl}";
         if (signature == lastSignature)
         {
@@ -226,7 +226,10 @@ internal static class Program
             Assets = new Assets
             {
                 LargeImageKey = string.IsNullOrWhiteSpace(lastCoverUrl) ? FallbackAssetKey : lastCoverUrl,
-                LargeImageText = Limit($"{title} — {artist}", 128)
+                LargeImageText = Limit($"{title} — {artist}", 128),
+                // Reuse the existing Mim0/default Discord asset as the small app icon.
+                SmallImageKey = FallbackAssetKey,
+                SmallImageText = "Mim0 | TelegramRPC"
             },
             Buttons =
             [
@@ -238,6 +241,8 @@ internal static class Program
             ]
         };
 
+        // Discord renders this timestamp pair as the thin playback progress bar,
+        // with elapsed/remaining time, similar to Spotify.
         if (playing && settings.ShowProgress)
         {
             var timeline = session.ControlSession.GetTimelineProperties();
