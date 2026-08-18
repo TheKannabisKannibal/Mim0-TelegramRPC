@@ -17,6 +17,7 @@ internal static class Program
     private const string FallbackAssetKey = "default";
     private const string LitterboxEndpoint = "https://litterbox.catbox.moe/resources/internals/api.php";
     private const string GitHubUrl = "https://github.com/TheKannabisKannibal/Mim0-TelegramRPC";
+    private const string GitHubButtonLabel = "Mim0 на GitHub";
 
     private static readonly string[] TelegramSourceHints = ["telegram", "ayugram", "exteragram"];
     private static readonly HttpClient Http = new();
@@ -206,7 +207,8 @@ internal static class Program
         if (paused && settings.ShowPausedState)
             state = Limit("⏸ " + state, 128);
 
-        var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}";
+        // Test branch: add a real Rich Presence button without changing the existing settings model.
+        var signature = $"{details}\n{state}\n{status}\n{lastCoverUrl}\n{settings.ShowProgress}\n{GitHubUrl}";
         if (signature == lastSignature)
         {
             currentTrack = $"{title} — {artist}";
@@ -225,7 +227,15 @@ internal static class Program
             {
                 LargeImageKey = string.IsNullOrWhiteSpace(lastCoverUrl) ? FallbackAssetKey : lastCoverUrl,
                 LargeImageText = Limit($"{title} — {artist}", 128)
-            }
+            },
+            Buttons =
+            [
+                new Button
+                {
+                    Label = GitHubButtonLabel,
+                    Url = GitHubUrl
+                }
+            ]
         };
 
         if (playing && settings.ShowProgress)
