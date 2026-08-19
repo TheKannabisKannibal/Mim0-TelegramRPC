@@ -9,7 +9,6 @@
     <AssemblyName>Mim0.TelegramRPC</AssemblyName>
     <RootNamespace>Mim0.TelegramRPC</RootNamespace>
     <ApplicationIcon>assets\Mim0.ico</ApplicationIcon>
-    <Version>1.4.1</Version>
     <Company>Mim0</Company>
     <Product>Mim0 | TelegramRPC</Product>
     <Description>Lightweight Windows music to Discord Rich Presence.</Description>
