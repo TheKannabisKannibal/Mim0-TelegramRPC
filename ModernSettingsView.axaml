@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Mim0.TelegramRPC.ModernSettingsView">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.title">
+      <Setter Property="Foreground" Value="#F5F7FA" />
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.subtitle">
+      <Setter Property="Foreground" Value="#8F98A8" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="Foreground" Value="#F5F7FA" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="#7D8797" />
+      <Setter Property="FontSize" Value="10" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#B8BFCC" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#151920" />
+      <Setter Property="BorderBrush" Value="#272D38" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Padding" Value="18" />
+      <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="Button.action">
+      <Setter Property="Background" Value="#252A34" />
+      <Setter Property="Foreground" Value="#DCE1E8" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="16,10" />
+      <Setter Property="CornerRadius" Value="9" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#E85B8A" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="18,10" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="#0F1217" />
+      <Setter Property="Foreground" Value="#E8EBF0" />
+      <Setter Property="BorderBrush" Value="#2A303B" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="10,8" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="Background" Value="#0F1217" />
+      <Setter Property="Foreground" Value="#E8EBF0" />
+      <Setter Property="BorderBrush" Value="#2A303B" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="Foreground" Value="#D8DDE5" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid Background="#0B0D11" ColumnDefinitions="220,*">
+    <Border Grid.Column="0" Background="#101319" BorderBrush="#272D38" BorderThickness="0,0,1,0" Padding="18,22">
+      <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+        <Border Width="40" Height="40" CornerRadius="12" Background="#E85B8A" HorizontalAlignment="Left">
+          <TextBlock Text="M" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <StackPanel Grid.Row="1" Margin="3,10,0,0">
+          <TextBlock Text="Mim0" Foreground="#F5F7FA" FontSize="18" FontWeight="SemiBold" />
+          <TextBlock Text="TelegramRPC" Foreground="#687181" FontSize="11" Margin="0,1,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Margin="0,30,0,0" Spacing="4">
+          <TextBlock Text="НАСТРОЙКИ" Foreground="#687181" FontSize="9" FontWeight="SemiBold" Margin="4,0,0,4" />
+          <Border Background="#3A202B" CornerRadius="8" Padding="10,9">
+            <TextBlock Text="Общие" Foreground="#F5F7FA" FontSize="12" FontWeight="SemiBold" />
+          </Border>
+          <Border CornerRadius="8" Padding="10,9">
+            <TextBlock Text="Discord Presence" Foreground="#AAB1BE" FontSize="12" />
+          </Border>
+          <Border CornerRadius="8" Padding="10,9">
+            <TextBlock Text="Отображение" Foreground="#AAB1BE" FontSize="12" />
+          </Border>
+          <TextBlock Text="ПРОЧЕЕ" Foreground="#687181" FontSize="9" FontWeight="SemiBold" Margin="4,18,0,4" />
+          <Border CornerRadius="8" Padding="10,9">
+            <TextBlock Text="Запуск" Foreground="#AAB1BE" FontSize="12" />
+          </Border>
+          <Border CornerRadius="8" Padding="10,9">
+            <TextBlock Text="О программе" Foreground="#AAB1BE" FontSize="12" />
+          </Border>
+        </StackPanel>
+        <StackPanel Grid.Row="4" Margin="4,0,0,2">
+          <TextBlock Text="●  Работает в фоне" Foreground="#55D99A" FontSize="11" />
+          <TextBlock Text="v1.5.2" Foreground="#687181" FontSize="10" Margin="0,7,0,0" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Column="1" RowDefinitions="76,*,64">
+      <Grid Grid.Row="0" Margin="28,0,24,0" ColumnDefinitions="*,Auto">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="Общие настройки" Classes="title" />
+          <TextBlock Text="Настрой, что именно Mim0 отправляет в Discord." Classes="subtitle" Margin="0,4,0,0" />
+        </StackPanel>
+        <Button Grid.Column="1" Content="×" Width="34" Height="34" Classes="action" Click="Close_Click" />
+      </Grid>
+
+      <ScrollViewer Grid.Row="1" Margin="28,0,28,0" VerticalScrollBarVisibility="Auto">
+        <Grid ColumnDefinitions="*,300" ColumnSpacing="16">
+          <StackPanel Grid.Column="0">
+            <Border Classes="card">
+              <StackPanel Spacing="9">
+                <TextBlock Text="Discord Rich Presence" Classes="section" />
+                <TextBlock Text="Что Mim0 будет показывать в Discord" Classes="muted" Margin="0,-4,0,5" />
+                <CheckBox x:Name="AlbumArt" Content="Показывать обложку трека" />
+                <CheckBox x:Name="Progress" Content="Показывать прогресс воспроизведения" />
+                <CheckBox x:Name="Paused" Content="Показывать ⏸ при паузе" />
+                <CheckBox x:Name="TelegramOnly" Content="Использовать только Telegram-плееры" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Формат присутствия" Classes="section" />
+                <TextBlock Text="Используй {title}, {artist} и {source}." Classes="muted" Margin="0,-4,0,5" />
+                <TextBlock Text="Верхняя строка (Details)" Classes="label" />
+                <TextBox x:Name="Details" />
+                <TextBlock Text="Нижняя строка (State)" Classes="label" Margin="0,5,0,0" />
+                <TextBox x:Name="State" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Общие" Classes="section" />
+                <TextBlock Text="Язык и запуск приложения" Classes="muted" Margin="0,-4,0,5" />
+                <Grid ColumnDefinitions="*,150">
+                  <TextBlock Text="Язык" Classes="label" VerticalAlignment="Center" />
+                  <ComboBox x:Name="Language" Grid.Column="1" SelectedIndex="0">
+                    <ComboBoxItem Content="Русский" />
+                    <ComboBoxItem Content="English" />
+                  </ComboBox>
+                </Grid>
+                <CheckBox x:Name="Startup" Content="Запускать Mim0 вместе с Windows" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel Grid.Column="1">
+            <TextBlock Text="Предпросмотр" Classes="section" Margin="2,2,0,10" />
+            <Border Classes="card" Padding="16">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Mim0 | TelegramRPC" Foreground="#8F98A8" FontSize="10" />
+                <Border Width="74" Height="74" CornerRadius="10" Background="#252A34" HorizontalAlignment="Left">
+                  <TextBlock Text="♫" Foreground="#E85B8A" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="Bring Eyes = Death Invite" Foreground="#F5F7FA" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="Imperial Circus Dead Decadence" Foreground="#AAB1BE" FontSize="11" TextWrapping="Wrap" />
+                <TextBlock Text="Слушает музыку" Foreground="#687181" FontSize="10" Margin="0,4,0,0" />
+                <Border Height="4" Background="#2B303A" CornerRadius="2" Margin="0,3,0,0">
+                  <Border Width="125" HorizontalAlignment="Left" Background="#E85B8A" CornerRadius="2" />
+                </Border>
+              </StackPanel>
+            </Border>
+            <Border Background="#0F1217" BorderBrush="#272D38" BorderThickness="1" CornerRadius="12" Padding="13" Margin="0,0,0,12">
+              <TextBlock Text="Подсказка&#x0a;Переменные: {title}, {artist}, {source}" Foreground="#8F98A8" FontSize="10" TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+
+      <Grid Grid.Row="2" Margin="28,0,28,0" ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+        <Button Grid.Column="1" Content="Отмена" Classes="action" Margin="0,0,8,0" Click="Cancel_Click" />
+        <Button Grid.Column="2" Content="Сохранить" Classes="primary" Click="Save_Click" />
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>
