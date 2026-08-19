@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace Mim0.TelegramRPC;
@@ -15,6 +16,14 @@ internal sealed class SettingsForm : Form
     private readonly ComboBox language;
     private readonly Label hint;
 
+    private static readonly Color Background = Color.FromArgb(18, 18, 22);
+    private static readonly Color Surface = Color.FromArgb(27, 27, 33);
+    private static readonly Color SurfaceHover = Color.FromArgb(34, 34, 41);
+    private static readonly Color Border = Color.FromArgb(48, 48, 58);
+    private static readonly Color TextPrimary = Color.FromArgb(242, 242, 247);
+    private static readonly Color TextSecondary = Color.FromArgb(158, 158, 170);
+    private static readonly Color Accent = Color.FromArgb(91, 141, 239);
+
     public AppSettings Settings { get; private set; }
 
     public SettingsForm(AppSettings settings)
@@ -28,94 +37,206 @@ internal sealed class SettingsForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
-        ClientSize = new Size(520, 540);
+        ClientSize = new Size(680, 610);
+        BackColor = Background;
+        ForeColor = TextPrimary;
         Font = new Font("Segoe UI", 9F);
+
+        var header = new Panel { Dock = DockStyle.Top, Height = 92, BackColor = Background };
+        var logo = new Label
+        {
+            Text = "M",
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Segoe UI Semibold", 15F),
+            ForeColor = Color.White,
+            BackColor = Accent,
+            Size = new Size(42, 42),
+            Location = new Point(24, 24)
+        };
+        logo.Paint += (_, e) =>
+        {
+            using var path = RoundedPath(logo.ClientRectangle, 10);
+            logo.Region = new Region(path);
+        };
 
         var title = new Label
         {
             Text = "Mim0 | TelegramRPC",
-            Font = new Font("Segoe UI Semibold", 16F),
+            Font = new Font("Segoe UI Semibold", 17F),
             AutoSize = true,
-            Location = new Point(24, 20)
+            Location = new Point(80, 20),
+            ForeColor = TextPrimary
         };
 
         var subtitle = new Label
         {
             Text = Localization.SettingsSubtitle,
             AutoSize = true,
-            Location = new Point(26, 51),
-            ForeColor = SystemColors.GrayText
+            Location = new Point(82, 51),
+            ForeColor = TextSecondary
         };
 
-        showAlbumArt = CreateCheckBox(Localization.AlbumArt, 90, Settings.ShowAlbumArt);
-        showProgress = CreateCheckBox(Localization.Progress, 120, Settings.ShowProgress);
-        showPaused = CreateCheckBox(Localization.Paused, 150, Settings.ShowPausedState);
-        telegramOnly = CreateCheckBox(Localization.TelegramOnly, 180, Settings.TelegramOnly);
-        startWithWindows = CreateCheckBox(Localization.StartWithWindows, 210, Settings.StartWithWindows);
+        header.Controls.AddRange([logo, title, subtitle]);
 
-        var languageLabel = new Label
+        var content = new Panel
         {
-            Text = Localization.LanguageLabel,
-            AutoSize = true,
-            Location = new Point(24, 246)
+            Dock = DockStyle.Fill,
+            Padding = new Padding(24, 0, 24, 0),
+            BackColor = Background,
+            AutoScroll = true
         };
+
+        var presenceCard = CreateCard(0, 0, 632, 214);
+        AddSectionTitle(presenceCard, "Discord Rich Presence", Localization.SettingsSubtitle, 18);
+
+        showAlbumArt = CreateSwitch(Localization.AlbumArt, 60, Settings.ShowAlbumArt);
+        showProgress = CreateSwitch(Localization.Progress, 94, Settings.ShowProgress);
+        showPaused = CreateSwitch(Localization.Paused, 128, Settings.ShowPausedState);
+        telegramOnly = CreateSwitch(Localization.TelegramOnly, 162, Settings.TelegramOnly);
+        presenceCard.Controls.AddRange([showAlbumArt, showProgress, showPaused, telegramOnly]);
+
+        var displayCard = CreateCard(0, 226, 632, 206);
+        AddSectionTitle(displayCard, Localization.DetailsLabel, Localization.Hint, 18);
+
+        var detailsLabel = CreateFieldLabel(Localization.DetailsLabel, 58);
+        detailsFormat = CreateTextBox(Settings.DetailsFormat, 82);
+        var stateLabel = CreateFieldLabel(Localization.StateLabel, 120);
+        stateFormat = CreateTextBox(Settings.StateFormat, 144);
+        displayCard.Controls.AddRange([detailsLabel, detailsFormat, stateLabel, stateFormat]);
+
+        var generalCard = CreateCard(0, 444, 632, 110);
+        AddSectionTitle(generalCard, Localization.LanguageLabel, null, 18);
 
         language = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 140,
-            Location = new Point(85, 242)
+            Width = 150,
+            Height = 30,
+            Location = new Point(18, 54),
+            BackColor = SurfaceHover,
+            ForeColor = TextPrimary,
+            FlatStyle = FlatStyle.Flat
         };
         language.Items.AddRange([Localization.Russian, Localization.English]);
         language.SelectedIndex = Settings.Language == "en" ? 1 : 0;
 
-        var detailsLabel = new Label { Text = Localization.DetailsLabel, AutoSize = true, Location = new Point(24, 282) };
-        detailsFormat = CreateTextBox(Settings.DetailsFormat, 310);
-
-        var stateLabel = new Label { Text = Localization.StateLabel, AutoSize = true, Location = new Point(24, 349) };
-        stateFormat = CreateTextBox(Settings.StateFormat, 377);
+        startWithWindows = CreateSwitch(Localization.StartWithWindows, 60, Settings.StartWithWindows);
+        startWithWindows.Location = new Point(210, 59);
+        generalCard.Controls.AddRange([language, startWithWindows]);
 
         hint = new Label
         {
             Text = Localization.Hint,
             AutoSize = true,
-            Location = new Point(24, 412),
-            ForeColor = SystemColors.GrayText
+            ForeColor = TextSecondary,
+            Location = new Point(24, 568)
         };
+        content.Controls.AddRange([presenceCard, displayCard, generalCard, hint]);
 
-        var reset = new System.Windows.Forms.Button { Text = Localization.Default, AutoSize = true, Location = new Point(24, 478) };
+        var footer = new Panel { Dock = DockStyle.Bottom, Height = 66, BackColor = Background };
+        var reset = CreateButton(Localization.Default, false, 24, 14, 105);
         reset.Click += (_, _) => ResetDefaults();
-
-        var cancel = new System.Windows.Forms.Button { Text = Localization.Cancel, DialogResult = DialogResult.Cancel, AutoSize = true, Location = new Point(350, 478) };
-        var save = new System.Windows.Forms.Button { Text = Localization.Save, DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(430, 478) };
+        var cancel = CreateButton(Localization.Cancel, false, 492, 14, 76);
+        cancel.DialogResult = DialogResult.Cancel;
+        var save = CreateButton(Localization.Save, true, 576, 14, 80);
         save.Click += (_, _) => SaveAndClose();
+        footer.Controls.AddRange([reset, cancel, save]);
 
         AcceptButton = save;
         CancelButton = cancel;
-
-        Controls.AddRange([
-            title, subtitle,
-            showAlbumArt, showProgress, showPaused, telegramOnly, startWithWindows,
-            languageLabel, language,
-            detailsLabel, detailsFormat, stateLabel, stateFormat, hint,
-            reset, cancel, save
-        ]);
+        Controls.AddRange([content, footer, header]);
     }
 
-    private CheckBox CreateCheckBox(string text, int top, bool value) => new()
+    private static Panel CreateCard(int x, int y, int width, int height)
+    {
+        var panel = new Panel
+        {
+            Location = new Point(x, y),
+            Size = new Size(width, height),
+            BackColor = Surface,
+            BorderStyle = BorderStyle.FixedSingle
+        };
+        return panel;
+    }
+
+    private static void AddSectionTitle(Control parent, string title, string? subtitle, int top)
+    {
+        var label = new Label
+        {
+            Text = title,
+            Font = new Font("Segoe UI Semibold", 10.5F),
+            AutoSize = true,
+            Location = new Point(18, top),
+            ForeColor = TextPrimary
+        };
+        parent.Controls.Add(label);
+
+        if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            var sub = new Label
+            {
+                Text = subtitle,
+                Font = new Font("Segoe UI", 8.5F),
+                AutoSize = true,
+                Location = new Point(18, top + 22),
+                ForeColor = TextSecondary
+            };
+            parent.Controls.Add(sub);
+        }
+    }
+
+    private static Label CreateFieldLabel(string text, int top) => new()
     {
         Text = text,
         AutoSize = true,
-        Location = new Point(24, top),
-        Checked = value
+        Location = new Point(18, top),
+        ForeColor = TextSecondary
+    };
+
+    private CheckBox CreateSwitch(string text, int top, bool value) => new()
+    {
+        Text = text,
+        AutoSize = true,
+        Location = new Point(18, top),
+        Checked = value,
+        ForeColor = TextPrimary,
+        BackColor = Surface,
+        FlatStyle = FlatStyle.Standard
     };
 
     private TextBox CreateTextBox(string text, int top) => new()
     {
         Text = text,
-        Width = 472,
-        Location = new Point(24, top)
+        Width = 596,
+        Height = 28,
+        Location = new Point(18, top),
+        BackColor = SurfaceHover,
+        ForeColor = TextPrimary,
+        BorderStyle = BorderStyle.FixedSingle
     };
+
+    private static Button CreateButton(string text, bool primary, int left, int top, int width) => new()
+    {
+        Text = text,
+        Size = new Size(width, 34),
+        Location = new Point(left, top),
+        FlatStyle = FlatStyle.Flat,
+        BackColor = primary ? Accent : Surface,
+        ForeColor = primary ? Color.White : TextPrimary,
+        FlatAppearance = { BorderColor = primary ? Accent : Border, BorderSize = 1 }
+    };
+
+    private static GraphicsPath RoundedPath(Rectangle bounds, int radius)
+    {
+        var path = new GraphicsPath();
+        int d = radius * 2;
+        path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
+        path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
+        path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
 
     private void ResetDefaults()
     {
@@ -126,6 +247,7 @@ internal sealed class SettingsForm : Form
         startWithWindows.Checked = false;
         detailsFormat.Text = "{title}";
         stateFormat.Text = "{artist}";
+        language.SelectedIndex = 0;
     }
 
     private void SaveAndClose()
