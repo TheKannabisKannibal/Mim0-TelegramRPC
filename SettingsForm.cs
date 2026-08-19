@@ -53,7 +53,7 @@ internal sealed class SettingsForm : Form
             Size = new Size(42, 42),
             Location = new Point(24, 24)
         };
-        logo.Paint += (_, e) =>
+        logo.Paint += (_, _) =>
         {
             using var path = RoundedPath(logo.ClientRectangle, 10);
             logo.Region = new Region(path);
@@ -149,39 +149,36 @@ internal sealed class SettingsForm : Form
 
     private static Panel CreateCard(int x, int y, int width, int height)
     {
-        var panel = new Panel
+        return new Panel
         {
             Location = new Point(x, y),
             Size = new Size(width, height),
             BackColor = Surface,
             BorderStyle = BorderStyle.FixedSingle
         };
-        return panel;
     }
 
     private static void AddSectionTitle(Control parent, string title, string? subtitle, int top)
     {
-        var label = new Label
+        parent.Controls.Add(new Label
         {
             Text = title,
             Font = new Font("Segoe UI Semibold", 10.5F),
             AutoSize = true,
             Location = new Point(18, top),
             ForeColor = TextPrimary
-        };
-        parent.Controls.Add(label);
+        });
 
         if (!string.IsNullOrWhiteSpace(subtitle))
         {
-            var sub = new Label
+            parent.Controls.Add(new Label
             {
                 Text = subtitle,
                 Font = new Font("Segoe UI", 8.5F),
                 AutoSize = true,
                 Location = new Point(18, top + 22),
                 ForeColor = TextSecondary
-            };
-            parent.Controls.Add(sub);
+            });
         }
     }
 
@@ -215,7 +212,7 @@ internal sealed class SettingsForm : Form
         BorderStyle = BorderStyle.FixedSingle
     };
 
-    private static Button CreateButton(string text, bool primary, int left, int top, int width) => new()
+    private static System.Windows.Forms.Button CreateButton(string text, bool primary, int left, int top, int width) => new()
     {
         Text = text,
         Size = new Size(width, 34),
