@@ -226,12 +226,12 @@ internal static class Program
         string source = session.ControlSession.SourceAppUserModelId ?? "Unknown source";
         string trackSignature = $"{source}\n{title}\n{artist}";
 
+        if (!EnsureDiscord())
+            return;
+
         string? coverUrl = null;
         if (settings.ShowAlbumArt)
             coverUrl = await CoverService.GetCoverUrlAsync(props, trackSignature);
-
-        if (!EnsureDiscord())
-            return;
 
         string details = FormatPresence(settings.DetailsFormat, title, artist, source);
         string state = FormatPresence(settings.StateFormat, title, artist, source);
@@ -249,9 +249,9 @@ internal static class Program
                 if (timeline.EndTime > timeline.StartTime)
                 {
                     duration = timeline.EndTime - timeline.StartTime;
-                    position = timeline.Position;
-                    if (position < TimeSpan.Zero || position >= duration)
-                        position = null;
+                    var timelinePosition = timeline.Position;
+                    if (timelinePosition >= TimeSpan.Zero && timelinePosition < duration.Value)
+                        position = timelinePosition;
                 }
             }
             catch
