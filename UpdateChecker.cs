@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -69,22 +71,13 @@ internal static class UpdateChecker
             await input.CopyToAsync(output, cancellationToken);
         }
 
-        var info = new ProcessStartInfo
-        {
-            FileName = installerPath,
-            UseShellExecute = true
-        };
-
-        Process.Start(info);
+        Process.Start(new ProcessStartInfo { FileName = installerPath, UseShellExecute = true });
         return true;
     }
 
     private static HttpClient CreateClient()
     {
-        var client = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Mim0-TelegramRPC", "1.3.0"));
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return client;
