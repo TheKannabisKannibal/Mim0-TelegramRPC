@@ -267,7 +267,6 @@ internal sealed class ModernSettingsWindow : Window
         var main = new Grid();
         main.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         main.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(315) });
-        main.ColumnSpacing = 18;
         scroll.Content = main;
 
         var settingsColumn = new StackPanel();
