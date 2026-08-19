@@ -3,7 +3,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
@@ -16,8 +15,11 @@
     <Copyright>Copyright © 2026 Mim0</Copyright>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="ModernSettingsWindow.cs" />
     <PackageReference Include="Dubya.WindowsMediaController" Version="2.5.6" />
     <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
+    <PackageReference Include="Avalonia" Version="11.3.20" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.20" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.20" />
+    <PackageReference Include="Avalonia.Win32.Interoperability" Version="11.3.20" />
   </ItemGroup>
 </Project>
