@@ -9,7 +9,6 @@ internal static class Localization
     public static void Configure(string? language)
     {
         CurrentLanguage = language == "en" ? "en" : "ru";
-        Program.RefreshTrayLocalization();
     }
 
     public static string DetectDefaultLanguage() =>
