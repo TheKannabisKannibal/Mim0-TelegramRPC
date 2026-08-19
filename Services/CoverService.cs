@@ -13,10 +13,10 @@ internal sealed class CoverService : IDisposable
     private readonly HttpClient http = new();
     private readonly Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal);
 
-    public CoverService()
+    public CoverService(string appVersion)
     {
         http.Timeout = TimeSpan.FromSeconds(20);
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("Mim0-TelegramRPC/1.5");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"Mim0-TelegramRPC/{appVersion}");
     }
 
     public async Task<string?> GetCoverUrlAsync(
@@ -28,11 +28,11 @@ internal sealed class CoverService : IDisposable
 
         cache.Remove(trackSignature);
 
-        var bytes = await ReadThumbnailAsync(props);
-        if (bytes == null)
+        var thumbnail = await ReadThumbnailAsync(props);
+        if (thumbnail == null)
             return null;
 
-        var url = await UploadAsync(bytes.Value.Bytes, bytes.Value.ContentType, bytes.Value.Extension);
+        var url = await UploadAsync(thumbnail.Value.Bytes, thumbnail.Value.ContentType, thumbnail.Value.Extension);
         if (url == null)
             return null;
 
