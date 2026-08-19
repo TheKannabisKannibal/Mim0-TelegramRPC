@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - test/rich-presence-v2
+      - test/ui-refresh-v1
     tags:
       - "v*"
   pull_request:
