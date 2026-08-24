@@ -5,6 +5,9 @@ on:
     branches:
       - test/youtube-track-button
       - test/universal-search-button
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -29,8 +32,6 @@ jobs:
     private static string BuildYouTubeSearchUrl(string artist, string title)
     {
         // Universal web search: YouTube, Spotify, SoundCloud, Apple Music and other services.
-        // The query intentionally contains the artist and track name so the destination
-        // is useful even when a service does not have an exact match.
         var query = Uri.EscapeDataString($"{artist} - {title} YouTube Spotify SoundCloud Apple Music");
         return $"https://www.google.com/search?q={query}";
     }
@@ -39,20 +40,9 @@ jobs:
           if ($updated -eq $text) { throw 'BuildYouTubeSearchUrl method was not found.' }
           Set-Content $path $updated -Encoding utf8
 
-      - name: Rename button label for universal search test
-        if: github.ref_name == 'test/universal-search-button'
-        shell: pwsh
-        run: |
-          $path = 'Program.cs'
-          $text = Get-Content $path -Raw
-          $text = $text.Replace('private const string YouTubeButtonLabel = "🔍";', 'private const string YouTubeButtonLabel = "🔍";')
-          Set-Content $path $text -Encoding utf8
-
       - name: Commit universal search test source
         if: github.ref_name == 'test/universal-search-button'
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
