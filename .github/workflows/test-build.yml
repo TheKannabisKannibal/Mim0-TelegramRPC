@@ -1,0 +1,52 @@
+name: Test Build
+
+on:
+  push:
+    branches:
+      - test/youtube-track-button
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore TelegramDiscordRPC.csproj
+
+      - name: Build
+        run: dotnet build TelegramDiscordRPC.csproj -c Release --no-restore
+
+      - name: Publish test build
+        run: >
+          dotnet publish TelegramDiscordRPC.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:Version=0.0.0-test
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $publish = "bin/Release/net8.0-windows10.0.17763.0/win-x64/publish"
+          $zip = "Mim0-TelegramRPC-test-youtube-button-win-x64.zip"
+          Compress-Archive -Path "$publish/*" -DestinationPath $zip -Force
+
+      - name: Upload test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mim0-TelegramRPC-test-youtube-button
+          path: Mim0-TelegramRPC-test-youtube-button-win-x64.zip
