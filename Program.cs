@@ -15,6 +15,7 @@ internal static class Program
     private const string FallbackAssetKey = "default";
     private const string GitHubUrl = "https://github.com/TheKannabisKannibal/Mim0-TelegramRPC";
     private const string GitHubButtonLabel = "Mim0 на GitHub";
+    private const string YouTubeButtonLabel = "🔍";
 
     private static readonly string[] TelegramSourceHints =
         ["telegram", "telegramdesktop", "org.telegram.desktop", "ayugram", "exteragram"];
@@ -260,11 +261,14 @@ internal static class Program
             }
         }
 
-        // Include the current position so seeking is reflected in Discord.
+        // Build a direct YouTube search for the current artist and track.
+        var youtubeSearchUrl = BuildYouTubeSearchUrl(artist, title);
+
+        // Include the current position and button URL so changes are reflected in Discord.
         var positionSignature = position.HasValue
             ? position.Value.TotalSeconds.ToString("F0")
             : "none";
-        var signature = $"{details}\n{state}\n{status}\n{coverUrl}\n{settings.ShowProgress}\n{positionSignature}\n{GitHubUrl}";
+        var signature = $"{details}\n{state}\n{status}\n{coverUrl}\n{settings.ShowProgress}\n{positionSignature}\n{GitHubUrl}\n{youtubeSearchUrl}";
 
         if (signature == lastSignature)
         {
@@ -292,6 +296,11 @@ internal static class Program
                 {
                     Label = GitHubButtonLabel,
                     Url = GitHubUrl
+                },
+                new Button
+                {
+                    Label = YouTubeButtonLabel,
+                    Url = youtubeSearchUrl
                 }
             ]
         };
@@ -317,6 +326,12 @@ internal static class Program
         {
             ResetDiscord();
         }
+    }
+
+    private static string BuildYouTubeSearchUrl(string artist, string title)
+    {
+        var query = Uri.EscapeDataString($"{artist} {title}");
+        return $"https://www.youtube.com/results?search_query={query}";
     }
 
     private static string FormatPresence(string format, string title, string artist, string source)

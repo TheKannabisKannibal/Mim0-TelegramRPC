@@ -1,0 +1,87 @@
+name: Test Build
+
+on:
+  push:
+    branches:
+      - test/youtube-track-button
+      - test/universal-search-button
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply universal search test change
+        if: github.ref_name == 'test/universal-search-button'
+        shell: pwsh
+        run: |
+          $path = 'Program.cs'
+          $text = Get-Content $path -Raw
+          $pattern = '(?s)    private static string BuildYouTubeSearchUrl\(string artist, string title\)\s*\{.*?\n    \}'
+          $replacement = @'
+    private static string BuildYouTubeSearchUrl(string artist, string title)
+    {
+        // Universal web search: YouTube, Spotify, SoundCloud, Apple Music and other services.
+        var query = Uri.EscapeDataString($"{artist} - {title} YouTube Spotify SoundCloud Apple Music");
+        return $"https://www.google.com/search?q={query}";
+    }
+'@
+          $updated = [regex]::Replace($text, $pattern, $replacement)
+          if ($updated -eq $text) { throw 'BuildYouTubeSearchUrl method was not found.' }
+          Set-Content $path $updated -Encoding utf8
+
+      - name: Commit universal search test source
+        if: github.ref_name == 'test/universal-search-button'
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Program.cs
+          if (-not (git diff --cached --quiet)) {
+            git commit -m 'test: use universal web search for track button'
+            git push
+          }
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore TelegramDiscordRPC.csproj
+
+      - name: Build
+        run: dotnet build TelegramDiscordRPC.csproj -c Release --no-restore
+
+      - name: Publish test build
+        run: >
+          dotnet publish TelegramDiscordRPC.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:Version=0.0.0-test
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $publish = "bin/Release/net8.0-windows10.0.17763.0/win-x64/publish"
+          $zip = "Mim0-TelegramRPC-test-universal-search-win-x64.zip"
+          Compress-Archive -Path "$publish/*" -DestinationPath $zip -Force
+
+      - name: Upload test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mim0-TelegramRPC-test-universal-search
+          path: Mim0-TelegramRPC-test-universal-search-win-x64.zip
